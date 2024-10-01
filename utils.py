@@ -54,21 +54,28 @@ for indice, tupla in enumerate(lista):
     email_list.append(email_funcionario)
     name_list.append(name_funcionario)
 
-
-# def check0():
-#     if 'Defaut' in ws['A1'].value:
-#         return False
-#     return True
+"""
+Abaixo jás uma função do código que pediram para não implementar, deixarei aqui via as duvidas
 
 
-# def default_p():
-#     ws.delete_rows(1, ws.max_row)
-#     dados_default = ['Empresa_Default', '11.111.111/0000-00', '(11) 11111-1111', 'contato@default.com', 'nome_default',
-#                      'Funcionario Default: funcionario_default@gmail.com']
-#     for coluna, valor in enumerate(dados_default, 1):
-#         ws.cell(1, coluna, valor)
-#     wb.save(config["planilha"])
-#
+# Cheva se "Default" se encontra no primeiro bloco do Excel
+def check0():
+    if 'Defaut' in ws['A1'].value:
+        # se sim, retorne True
+        return True
+    # Se não, retorne False
+    return False
+
+# Faz um template inicial para a planilha, deixando-a inteira em "Default-Mode"
+def default_p():
+    ws.delete_rows(1, ws.max_row)  # Deleta a planilha inteira 
+    dados_default = ['Empresa_Default', '11.111.111/0000-00', '(11) 11111-1111', 'contato@default.com', 'nome_default',
+                     'Funcionario Default: funcionario_default@gmail.com']
+    for coluna, valor in enumerate(dados_default, 1):
+        ws.cell(1, coluna, valor)  # Insere os dados "Default"
+    wb.save(config["planilha"])  # Salva a planilha
+"""
+
 
 def list_s():
     text_boxes = []
@@ -76,7 +83,6 @@ def list_s():
         if shape.has_text_frame and shape.text:
             text_boxes.append(shape.text)
     return text_boxes
-
 
 def change_text(txt_id, new_txt):
     count = 0
@@ -140,7 +146,7 @@ def clear_files(file: str):
         print(f"Failed to delete {file}: {error}")
 
 
-async def convert_slide(file):
+async def convert_to_pdf(file):
     try:
         convert(diretorio, diretorio)
         print("Conversion done!")
@@ -150,7 +156,7 @@ async def convert_slide(file):
         print(f"(PPTX) Conversion failed: {e}")
 
 
-async def convert_pdf(file):
+async def convert_to_img(file):
     try:
         if ".pdf" in file:
             pdf = fitz.open(file)
