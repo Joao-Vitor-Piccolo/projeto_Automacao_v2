@@ -6,6 +6,7 @@ import fitz
 from pptxtopdf import convert
 import win32com.client as win32
 import json
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 config_path = 'config.json'
 
@@ -24,27 +25,43 @@ def load_config(config_p):
 
 
 config = load_config(config_path)
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
+
+x = 0  # Variavel global que ajuda a função "make_slide()" a manter os indices das listas
+
+wb = load_workbook(config['planilha'])  # Carrega o arquivo .xlsx determinado na config.json
+ws = wb.active  # deixa o "workbook", a planilha, ativa.
+
+lista = []  # cria uma lista que irá conter todos os dados da planilha
+lista_copy = lista  # Faz uma cópia da lista pois a mesma irá ser desfeita, pelo pop()
+path = config['pptx0_file']  # Armazena o caminho do template do pptx
+diretorio = os.path.join(os.getcwd(), 'Slides')  # Armazena na variavel o caminho que será armazenado os pdfs e afins
+
+# Carrega o outlook
+outlook = win32.Dispatch("Outlook.Application")
+namespace = outlook.GetNamespace("MAPI")
+
+# Carrega os slides pptx
+ppt = Presentation(path)
+slide = ppt.slides[0]  # Pega o unico slide
+
+# Essas duas listas são feitas para separar o nome e o email de cada funcionario
+# Seram usada na função send_email()
 
 email_list = []
 name_list = []
 
-x = 0
 
-wb = load_workbook(config['planilha'])
-ws = wb.active
-lista = []
-lista_copy = lista
-path1 = config['pptx0_file']
-diretorio = os.path.join(os.getcwd(), 'Slides')
-outlook = win32.Dispatch("Outlook.Application")
-namespace = outlook.GetNamespace("MAPI")
-
-ppt = Presentation(path1)
-slide = ppt.slides[0]
+# Preenche a lista com todas as informaçÕes da planilha
+# separando cada linha da planilha, em uma lista, fazendo uma lista de listas
 
 for row in ws.iter_rows(values_only=True):
     if any(cell is not None for cell in row):
         lista.append(row)
+
+
+# Faz a mesma coisa que a anterior, mas preenche as listas:
+# email_funcionario e name_funcionario
 
 for indice, tupla in enumerate(lista):
     email_funcionario = lista[indice][-1].split(":")[1].replace(" ", "")
@@ -54,8 +71,11 @@ for indice, tupla in enumerate(lista):
     email_list.append(email_funcionario)
     name_list.append(name_funcionario)
 
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=Cemitério-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
+
 """
-Abaixo jás uma função do código que pediram para não implementar, deixarei aqui via as duvidas
+Abaixo jás uma função que pediram para não implementar: 
+deixarei aqui via as duvidas
 
 
 # Cheva se "Default" se encontra no primeiro bloco do Excel
@@ -74,7 +94,21 @@ def default_p():
     for coluna, valor in enumerate(dados_default, 1):
         ws.cell(1, coluna, valor)  # Insere os dados "Default"
     wb.save(config["planilha"])  # Salva a planilha
+    
 """
+
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
+
+# Classe cliente:
+# Armazena alguns dados importantes para serem chamados mais tarde
+
+class Cliente:
+    def __init__(self, empresa, cnpj, celular, email, nome_s):
+        self.empresa = empresa
+        self.cnpj = cnpj
+        self.celular = celular
+        self.email = email
+        self.nome_s = nome_s
 
 
 def list_s():
@@ -110,14 +144,6 @@ def change_text(txt_id, new_txt):
                 return
 
 
-class Cliente:
-    def __init__(self, empresa, cnpj, celular, email, nome_s):
-        self.empresa = empresa
-        self.cnpj = cnpj
-        self.celular = celular
-        self.email = email
-        self.nome_s = nome_s
-
 async def make_slide():
     global x
     nome_funcionario = lista_copy[0][5].split(":")[0]
@@ -130,12 +156,12 @@ async def make_slide():
     change_text(5, 'Telefone: ' + cliente.celular)
     change_text(6, 'Email: ' + cliente.email)
     change_text(7, 'Nome dos sócios: ' + cliente.nome_s)
-    path = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
-    ppt.save(path)
+    file = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
+    ppt.save(file)
     x += 1
     print(f'Slides: {x} PRONTO!')
     lista_copy.pop(0)
-    return path
+    return file
 
 
 def clear_files(file: str):
