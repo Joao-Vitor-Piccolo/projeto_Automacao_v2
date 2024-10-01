@@ -1,11 +1,14 @@
 import asyncio
 import utils
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 # Cria um objeto Queue, ou fila, para cada processo
 queue_make_pptx = asyncio.Queue()
 queue_convert_pdf = asyncio.Queue()
 queue_convert_image = asyncio.Queue()
 queue_send_email = asyncio.Queue()
+
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 
 # Essa funções começam os processos de criação de slide e os colocam nas filas criadas
@@ -49,7 +52,7 @@ async def async_send_email():
         await utils.send_email(file)  # Coloca o path na função e a chama
         queue_send_email.task_done()  # Termina a fila para a proxima.
 
-
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 async def main():
     # Cria as "tasks" das funções assincronas, as chamando-as e
     # também fazendo assim a parte assincrona do código funcionar.
@@ -61,6 +64,8 @@ async def main():
     # Chama, pelo .utils, uma lista que contem  a quantidade de vezes que o código precisa funcionar
     for x in range(len(utils.lista)):
         await queue_make_pptx.put(x)  # Para cada item na lista, coloque um item na fila de fazer slides
+
+# I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 if __name__ == '__main__':
     asyncio.run(main())
