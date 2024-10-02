@@ -8,23 +8,24 @@ import win32com.client as win32
 import json
 # I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
-config_path = 'config.json'
+config_path = 'config.json'  # Arquivo de configuração, para que exista um meio do usuario mudar algumas coisas
 
 
+# Carregamento e leitura desse arquivo
 def load_config(config_p):
     if os.path.exists(config_p):
         with open(config_p, 'r') as file:
             return json.load(file)
     else:
-        return {
+        return {          # Se não existir dados, ele usa esses aqui.
             "horario": "15:00",
-            "email": "jvpiccolo13@gmail.com",
+            "email": "email_default@default.com",
             "planilha": "planilha_cliente.xlsx",
             "pptx0_file": "Informativo - Email Especialistas.pptx"
         }
 
 
-config = load_config(config_path)
+config = load_config(config_path)  # atribui a variavel o dicionario do arquivo json
 # I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 x = 0  # Variavel global que ajuda a função "make_slide()" a manter os indices das listas
@@ -99,10 +100,13 @@ def default_p():
 
 # I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
-# Classe cliente:
-# Armazena alguns dados importantes para serem chamados mais tarde
+#
 
 class Cliente:
+    """
+    Classe cliente:
+    Armazena alguns dados importantes para serem chamados mais tarde
+    """
     def __init__(self, empresa, cnpj, celular, email, nome_s):
         self.empresa = empresa
         self.cnpj = cnpj
@@ -110,104 +114,155 @@ class Cliente:
         self.email = email
         self.nome_s = nome_s
 
-
 def list_s():
+    """
+    Retorna as caixas de texto que existem nos arquivos pptx
+    :return: list de caixas_de_texto de um pptx
+    """
     text_boxes = []
-    for shape in slide.shapes:
-        if shape.has_text_frame and shape.text:
+    for shape in slide.shapes:  # Para cada layer no slide, verifica se existe caixas de texto
+        if shape.has_text_frame and shape.text:  # Se a camada tem caixa de texto E tem texto nela, adiciona na lista
             text_boxes.append(shape.text)
     return text_boxes
 
-def change_text(txt_id, new_txt):
+def change_text(txt_id: int, new_txt: str):
+    """
+    Funciona em dois turnos:
+    No primeiro; ele armazena o padrão do texto anterior.
+    No segundo; Ele aplica o texto novo, pedindo o ID do texto e o novo texto em si.
+    :param txt_id: int.
+    :param new_txt: str.
+    :return: nothing
+    """
     count = 0
-    for shape in slide.shapes:
-        if shape.has_text_frame and shape.text:
+    for shape in slide.shapes:  # Para cada layer no slide:
+        if shape.has_text_frame and shape.text:  # verifica se existe caixas de texto nessa layer
+
+            # Acrescenta um numero ao contador, que verifica se essa caixa de texto é a mesma fornecida no ID
             count += 1
-            if count == txt_id:
+            if count == txt_id:  # se for o texto escolhido pela função,
                 text_frame = shape.text_frame
                 first_paragraph = text_frame.paragraphs[0]
                 first_run = first_paragraph.runs[0] if first_paragraph.runs else first_paragraph.add_run()
-                # Preserve formatting of the first run
+                # Armazena a formatação da primeira run
                 font = first_run.font
                 font_name = font.name
                 font_size = font.size
                 font_bold = font.bold
-                # Clear existing text and apply new text with preserved formatting
-                text_frame.clear()  # Clears all text and formatting
-                new_run = text_frame.paragraphs[0].add_run()  # New run in first paragraph
+                # Deleta todo e qualquer texto anterior e aplica o texto novo:
+
+                text_frame.clear()  # Deleta todo o texto e sua formatação
+                new_run = text_frame.paragraphs[0].add_run()  # Cria o novo texto no primeiro paragrafo
                 new_run.text = new_txt
-                # Apply the new run
+                # Aplica a nova run
                 new_run.font.name = font_name
                 new_run.font.size = font_size
                 new_run.font.bold = font_bold
-                new_run.font.color.rgb = RGBColor(255, 255, 255)
+                new_run.font.color.rgb = RGBColor(255, 255, 255)  # Aplica a cor dos textos. No caso, branco.
                 return
 
 
 async def make_slide():
-    global x
-    nome_funcionario = lista_copy[0][5].split(":")[0]
+    """
+    Monta um arquivo .pptx, usando o ID da caixa de texto e o texto inserido.
+    :return str. Path para o arquivo montado.
+    """
+    global x  # É utilizada para demarcar quantos slides foram produzidos para assim nomea-los corretamente
+    nome_funcionario = lista_copy[0][5].split(":")[0]  # Armazena o nome do funcionario em str
     if " " in nome_funcionario:
-        nome_funcionario = nome_funcionario.split(" ")[0]
+        nome_funcionario = nome_funcionario.split(" ")[0]  # Retira qualquer possivel espaçamento no nome
+
+    # Adiciona, (através dos dados armazenados na lista), atributos no objeto cliente.
     cliente = Cliente(lista_copy[0][0], lista_copy[0][1], lista_copy[0][2], lista_copy[0][3], lista_copy[0][4])
+
+    # Por meio da função "change_text()", usa os dados do objeto cliente para mudar o texto do arquivo pptx:
+    # change_text(ID_do_texto, Texto_novo) sendo o ID do texto qual caixa de texto ele vai mudar.
     change_text(1, nome_funcionario + ', TEM UM CLIENTE NOVO ESPERANDO O SEU BOAS VINDAS!!!')
     change_text(3, 'Empresa: ' + cliente.empresa)
     change_text(4, 'CNPJ: ' + cliente.cnpj)
     change_text(5, 'Telefone: ' + cliente.celular)
     change_text(6, 'Email: ' + cliente.email)
     change_text(7, 'Nome dos sócios: ' + cliente.nome_s)
+
+    # Armazena o caminho e o nome do arquivo montado:
     file = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
-    ppt.save(file)
-    x += 1
+    ppt.save(file)  # Salva ele
+    x += 1  # Adiciona mais um na variavel global para manter "tracking" de quantos foram produzidos
     print(f'Slides: {x} PRONTO!')
-    lista_copy.pop(0)
+    lista_copy.pop(0)  # Remove o item da lista para o proximo ser chamado. (Por isso a cópia e não a lista factual)
     return file
 
-
 def clear_files(file: str):
+    """
+    Deleta um arquivo
+    :param file: str. Path do arquivo escolhido
+    :return: nothing
+    """
     try:
         os.remove(file)
         print(f"Deleted: {file}")
     except Exception as error:
-        print(f"Failed to delete {file}: {error}")
+        print(f"Failed to delete {file}: {error}")  # Se não deletado, retona um erro e o arquivo
 
 
-async def convert_to_pdf(file):
+async def convert_to_pdf(file: str):
+    """
+    Converte todos os arquivos pptx, e retorna o True para manter a fila rodando.
+    :param file: str. Path do arquivo a ser convertido
+    :return: bool.
+    """
     try:
-        convert(diretorio, diretorio)
+        convert(diretorio, diretorio)  # Converte todos os arquivos da pasta Slides, e os converte lá mesmo.
         print("Conversion done!")
-        clear_files(file)
+        clear_files(file)  # Limpa o arquivo convertido
         return True
     except Exception as e:
         print(f"(PPTX) Conversion failed: {e}")
 
 
-async def convert_to_img(file):
+async def convert_to_img(file: str):
+    """
+    Converte o arquivo passado .pdf, e retorna o arquivo convertido para manter a fila rodando.
+    :param file: str. Path do arquivo a converter de PDF para JPG
+    :return: str. Path do arquivo já convertido
+    """
     try:
         if ".pdf" in file:
+            # Abre o pdf, carrega a unica pagina, converte o arquivo, armazena a nova extensão em file_v2,
+            # salva, fecha, e exclui o arquivo anterior .pdf.
             pdf = fitz.open(file)
             page = pdf.load_page(0)
             pix = page.get_pixmap()
-            file2 = file.replace(".pdf", ".jpg")
-            pix.save(file2)
+            file_v2 = file.replace(".pdf", ".jpg")
+            pix.save(file_v2)
             pdf.close()
             clear_files(file)
-            return file2
+            return file_v2
     except Exception as e:
         print(f"(PDF) Conversion failed: {e}")
 
 
 def check_conta(mail):
+    """
+    Verifica se a conta (colocada no config.json) existe, se existir, retorna True e muda para ela.
+    :param mail: class.
+    :return: bool. Retorna True para sinalizar que a conta foi mudada.
+    """
     for myEmailAddress in outlook.Session.Accounts:
         if config['email'] in str(myEmailAddress):
             mail._oleobj_.Invoke(*(64209, 0, 8, 0, myEmailAddress))
             return True
 
 async def send_email(file):
-    nome_funcionario = name_list.pop(0)
-    mail = outlook.CreateItem(0)
-    if check_conta(mail):
-        mail.Subject = f"{nome_funcionario}, Veja seus clientes!!"
+    """
+    Função de enviar email, recebe um parametro que é o jpg que vai ser utilizado para anexar ao email.
+    :param file: str. Path do arquivo JPG.
+    :return: nothing
+    """
+    nome_funcionario = name_list.pop(0)  # Armazena o nome do funcionario ao mesmo tempo que o tira da lista/fila.
+    mail = outlook.CreateItem(0)  # Cria um objeto de email
+    if check_conta(mail):  # Checa se existe a conta colocada em config.json
+        mail.Subject = f"{nome_funcionario}, Veja seus clientes!!"  # Assunto do email
         mail.HTMLBody = f"""<html>
                     <body>
                         <h2 style="border: 2px solid black; padding: 10px; color: white; text-align: center;">
@@ -217,19 +272,17 @@ async def send_email(file):
                     </body>
                     </html>
                     """
-        attachment = mail.Attachments.Add(file)
+
+        attachment = mail.Attachments.Add(file)  # Coloca o anexo, no caso a imagem enviada.
         attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F",
-                                                "image1")
-        mail.To = email_list[0]
+                                                "image1")  # Envia o anexo no formado desejado. (Inteiro/Descompactado)
+        mail.To = email_list[0]  # Envia para o email que está na lista
         try:
-            mail.Send()
+            mail.Send()  # Envia
             print('Enviado para:', email_list[0])
-            email_list.pop(0)
+            email_list.pop(0)  # Remove o email já enviado para enviar o proximo
         except Exception as error:
             print('Não enviado: ', error)
-        clear_files(file)
-    #   default_p()
+        clear_files(file)  # Deleta o arquivo do email já enviado
 
-
-def get_time():
-    return config['horario']
+    #   default_p()  Função não implementada que deixa a planilha principal em Default
