@@ -6,6 +6,7 @@ import fitz
 from pptxtopdf import convert
 import win32com.client as win32
 import json
+
 # I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
 config_path = 'config.json'  # Arquivo de configuração, para que exista um meio do usuario mudar algumas coisas
@@ -17,7 +18,7 @@ def load_config(config_p):
         with open(config_p, 'r') as file:
             return json.load(file)
     else:
-        return {          # Se não existir dados, ele usa esses aqui.
+        return {  # Se não existir dados, ele usa esses aqui.
             "horario": "15:00",
             "email": "email_default@default.com",
             "planilha": "planilha_cliente.xlsx",
@@ -52,14 +53,12 @@ slide = ppt.slides[0]  # Pega o unico slide
 email_list = []
 name_list = []
 
-
 # Preenche a lista com todas as informaçÕes da planilha
 # separando cada linha da planilha, em uma lista, fazendo uma lista de listas
 
 for row in ws.iter_rows(values_only=True):
     if any(cell is not None for cell in row):
         lista.append(row)
-
 
 # Faz a mesma coisa que a anterior, mas preenche as listas:
 # email_funcionario e name_funcionario
@@ -95,8 +94,9 @@ def default_p():
     for coluna, valor in enumerate(dados_default, 1):
         ws.cell(1, coluna, valor)  # Insere os dados "Default"
     wb.save(config["planilha"])  # Salva a planilha
-    
+
 """
+
 
 # I-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-I
 
@@ -107,12 +107,14 @@ class Cliente:
     Classe cliente:
     Armazena alguns dados importantes para serem chamados mais tarde
     """
+
     def __init__(self, empresa, cnpj, celular, email, nome_s):
         self.empresa = empresa
         self.cnpj = cnpj
         self.celular = celular
         self.email = email
         self.nome_s = nome_s
+
 
 def list_s():
     """
@@ -124,6 +126,7 @@ def list_s():
         if shape.has_text_frame and shape.text:  # Se a camada tem caixa de texto E tem texto nela, adiciona na lista
             text_boxes.append(shape.text)
     return text_boxes
+
 
 def change_text(txt_id: int, new_txt: str):
     """
@@ -158,7 +161,10 @@ def change_text(txt_id: int, new_txt: str):
                 new_run.font.name = font_name
                 new_run.font.size = font_size
                 new_run.font.bold = font_bold
-                new_run.font.color.rgb = RGBColor(255, 255, 255)  # Aplica a cor dos textos. No caso, branco.
+                if count == 5:
+                    new_run.font.color.rgb = RGBColor(255, 255, 255)
+                else:
+                    new_run.font.color.rgb = RGBColor(0, 0, 0)  # Aplica a cor dos textos. No caso, branco.
                 return
 
 
@@ -177,12 +183,12 @@ async def make_slide():
 
     # Por meio da função "change_text()", usa os dados do objeto cliente para mudar o texto do arquivo pptx:
     # change_text(ID_do_texto, Texto_novo) sendo o ID do texto qual caixa de texto ele vai mudar.
-    change_text(1, nome_funcionario + ', TEM UM CLIENTE NOVO ESPERANDO O SEU BOAS VINDAS!!!')
-    change_text(3, 'Empresa: ' + cliente.empresa)
-    change_text(4, 'CNPJ: ' + cliente.cnpj)
-    change_text(5, 'Telefone: ' + cliente.celular)
-    change_text(6, 'Email: ' + cliente.email)
-    change_text(7, 'Nome dos sócios: ' + cliente.nome_s)
+    change_text(5, nome_funcionario + ', ')
+    change_text(8, 'Empresa: ' + cliente.empresa)
+    change_text(7, 'CNPJ: ' + cliente.cnpj)
+    change_text(9, 'Telefone: ' + cliente.celular)
+    change_text(10, 'Email: ' + cliente.email)
+    change_text(11, 'Nome dos sócios: ' + cliente.nome_s)
 
     # Armazena o caminho e o nome do arquivo montado:
     file = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
@@ -191,6 +197,7 @@ async def make_slide():
     print(f'Slides: {x} PRONTO!')
     lista_copy.pop(0)  # Remove o item da lista para o proximo ser chamado. (Por isso a cópia e não a lista factual)
     return file
+
 
 def clear_files(file: str):
     """
@@ -253,6 +260,7 @@ def check_conta(mail):
             mail._oleobj_.Invoke(*(64209, 0, 8, 0, myEmailAddress))
             return True
 
+
 async def send_email(file):
     """
     Função de enviar email, recebe um parametro que é o jpg que vai ser utilizado para anexar ao email.
@@ -276,6 +284,8 @@ async def send_email(file):
         attachment = mail.Attachments.Add(file)  # Coloca o anexo, no caso a imagem enviada.
         attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F",
                                                 "image1")  # Envia o anexo no formado desejado. (Inteiro/Descompactado)
+        attachment_v2 = os.path.join(os.getcwd(), config["anexo_2"])
+        mail.Attachments.Add(attachment_v2)
         mail.To = email_list[0]  # Envia para o email que está na lista
         try:
             mail.Send()  # Envia
