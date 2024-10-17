@@ -176,12 +176,12 @@ async def make_slide():
 
     cliente = Cliente(lista_copy[0][0], lista_copy[0][1], lista_copy[0][2], lista_copy[0][3], lista_copy[0][4])
 
-    change_text(5, nome_funcionario + ',')
-    change_text(8, cliente.empresa)
-    change_text(7, cliente.cnpj)
-    change_text(9, cliente.celular)
-    change_text(10, cliente.email)
-    change_text(16, cliente.nome_s)
+    change_text(1, nome_funcionario + ', TEM UM CLIENTE NOVO ESPERANDO O SEU BOAS VINDAS!!!')
+    change_text(3, f'Empresa: {cliente.empresa}')
+    change_text(4, f'CNPJ: {cliente.cnpj}')
+    change_text(5, f'Telefone: {cliente.celular}')
+    change_text(6, f'Email: {cliente.email}')
+    change_text(7, f'Nome dos sócios: {cliente.nome_s}')
 
     file = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
     ppt.save(file)
