@@ -169,33 +169,26 @@ def change_text(txt_id: int, new_txt: str):
 
 
 async def make_slide():
-    """
-    Monta um arquivo .pptx, usando o ID da caixa de texto e o texto inserido.
-    :return str. Path para o arquivo montado.
-    """
-    global x  # É utilizada para demarcar quantos slides foram produzidos para assim nomea-los corretamente
-    nome_funcionario = lista_copy[0][5].split(":")[0]  # Armazena o nome do funcionario em str
+    global x
+    nome_funcionario = lista_copy[0][5].split(":")[0]
     if " " in nome_funcionario:
-        nome_funcionario = nome_funcionario.split(" ")[0]  # Retira qualquer possivel espaçamento no nome
+        nome_funcionario = nome_funcionario.split(" ")[0]
 
-    # Adiciona, (através dos dados armazenados na lista), atributos no objeto cliente.
     cliente = Cliente(lista_copy[0][0], lista_copy[0][1], lista_copy[0][2], lista_copy[0][3], lista_copy[0][4])
 
-    # Por meio da função "change_text()", usa os dados do objeto cliente para mudar o texto do arquivo pptx:
-    # change_text(ID_do_texto, Texto_novo) sendo o ID do texto qual caixa de texto ele vai mudar.
-    change_text(5, nome_funcionario + ', ')
-    change_text(8, 'Empresa: ' + cliente.empresa)
-    change_text(7, 'CNPJ: ' + cliente.cnpj)
-    change_text(9, 'Telefone: ' + cliente.celular)
-    change_text(10, 'Email: ' + cliente.email)
-    change_text(11, 'Nome dos sócios: ' + cliente.nome_s)
+    change_text(5, nome_funcionario + ',')
+    change_text(8, cliente.empresa)
+    change_text(7, cliente.cnpj)
+    change_text(9, cliente.celular)
+    change_text(10, cliente.email)
+    change_text(16, cliente.nome_s)
 
-    # Armazena o caminho e o nome do arquivo montado:
     file = os.path.join(diretorio, f'Email_{str(x + 1)}_Especialistas.pptx')
-    ppt.save(file)  # Salva ele
-    x += 1  # Adiciona mais um na variavel global para manter "tracking" de quantos foram produzidos
+    ppt.save(file)
+    x += 1
     print(f'Slides: {x} PRONTO!')
-    lista_copy.pop(0)  # Remove o item da lista para o proximo ser chamado. (Por isso a cópia e não a lista factual)
+
+    lista_copy.pop(0)
     return file
 
 
@@ -270,6 +263,7 @@ async def send_email(file):
     nome_funcionario = name_list.pop(0)  # Armazena o nome do funcionario ao mesmo tempo que o tira da lista/fila.
     mail = outlook.CreateItem(0)  # Cria um objeto de email
     if check_conta(mail):  # Checa se existe a conta colocada em config.json
+        print("email aceito")
         mail.Subject = f"{nome_funcionario}, Veja seus clientes!!"  # Assunto do email
         mail.HTMLBody = f"""<html>
                     <body>
