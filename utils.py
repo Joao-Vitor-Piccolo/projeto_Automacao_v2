@@ -162,9 +162,9 @@ def change_text(txt_id: int, new_txt: str):
                 new_run.font.size = font_size
                 new_run.font.bold = font_bold
                 if count == 5:
-                    new_run.font.color.rgb = RGBColor(255, 255, 255)
+                    new_run.font.color.rgb = RGBColor(255,255,255)
                 else:
-                    new_run.font.color.rgb = RGBColor(0, 0, 0)  # Aplica a cor dos textos. No caso, branco.
+                    new_run.font.color.rgb = RGBColor(255, 255, 255)  # Aplica a cor dos textos. No caso, branco.
                 return
 
 
